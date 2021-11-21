@@ -10,7 +10,7 @@ fn main() {
                 .long("delimiter")
                 .about("(option) delimiter")
                 .takes_value(true)
-                .default_value("\\t"),
+                .default_value("\t"),
         )
         .arg(
             Arg::new("header")
