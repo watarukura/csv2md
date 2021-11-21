@@ -37,10 +37,7 @@ fn main() {
         let header = reader.headers().unwrap();
         writer.write_record(header).unwrap();
         let len = header.len();
-        let mut header_line = Vec::with_capacity(len);
-        for _ in 0..len {
-            header_line.push(" -- ");
-        }
+        let header_line = vec![" -- "; len];
         writer.write_record(&header_line).unwrap();
     }
     for line in reader.records() {
