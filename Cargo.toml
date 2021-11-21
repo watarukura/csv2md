@@ -8,3 +8,6 @@ edition = "2018"
 [dependencies]
 clap = "=3.0.0-beta.2"
 csv = "1.1.6"
+
+[dev-dependencies]
+cargo-make = "0.35.6"
