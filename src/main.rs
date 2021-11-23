@@ -1,6 +1,6 @@
 use clap::{App, Arg};
 use std::error::Error;
-use std::io::Read;
+use std::io::{BufWriter, Read};
 use std::{io, process};
 
 struct Cli {
@@ -40,14 +40,14 @@ fn from_args() -> Cli {
     args
 }
 
-fn run(data: &[u8], args: Cli) -> Result<(), Box<dyn Error>> {
+fn run(data: &[u8], args: Cli, writer: impl std::io::Write) -> Result<(), Box<dyn Error>> {
     let mut reader = csv::ReaderBuilder::new()
         .delimiter(args.delimiter)
         .has_headers(args.has_header)
         .from_reader(data);
     let mut writer = csv::WriterBuilder::new()
         .delimiter(b'|')
-        .from_writer(io::stdout());
+        .from_writer(writer);
     if args.has_header {
         let header = reader.headers()?;
         writer.write_record(header)?;
@@ -70,7 +70,9 @@ fn main() {
         process::exit(1);
     }
     let args = from_args();
-    if let Err(err) = run(&data, args) {
+    let stdout = io::stdout();
+    let out = BufWriter::new(stdout.lock());
+    if let Err(err) = run(&data, args, out) {
         eprintln!("{}", err);
         process::exit(1);
     }
@@ -81,17 +83,20 @@ mod test {
     use crate::{run, Cli};
 
     #[test]
-    fn input_test() {
+    fn delimiter_comma_test() {
         let data = "\
 city,country,pop
 Boston,United States,4628910
 Concord,United States,42695
 ";
+        let markdown = "city|country|pop\n -- | -- | -- \nBoston|United States|4628910\nConcord|United States|42695\n";
         let args = Cli {
             delimiter: ",".as_bytes()[0],
             has_header: true,
         };
-        let result = run(data.as_bytes(), args);
+        let mut writer = Vec::new();
+        let result = run(data.as_bytes(), args, &mut writer);
         assert!(result.is_ok());
+        assert_eq!(writer, markdown.as_bytes());
     }
 }
